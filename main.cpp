@@ -1,8 +1,10 @@
 #include <iostream>
-
+#include "server.h"
+#include "client.h"
 
 int main()
 {
-    std::cout << "Hello world!" << std::endl;
-    return 0;
+    // Initialize the server
+    Server server;
+    server.start(8080);
 }
