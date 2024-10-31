@@ -16,17 +16,19 @@ public:
     Server() : serverSocket(INVALID_SOCKET) {}
     ~Server() { cleanup(); }
 
-    void initialize();
-    void bindAndListen(int port);
-    SOCKET acceptConnection();
     void receiveFile(SOCKET clientSocket);
     void cleanup();
-    void start(int port);
-    void closeSocket(SOCKET& socket);
+    void start();
+
     
 
 private:
     SOCKET serverSocket;
+
+    void initialize();
+    void bindAndListen(int port);
+    SOCKET acceptConnection();
+    void closeSocket(SOCKET& socket);
 };
 
 

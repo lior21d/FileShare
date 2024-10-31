@@ -1,4 +1,11 @@
-#include "server.h"
+#include "server.hpp"
+
+int main()
+{
+    // Initialize the server
+    Server server;
+    server.start();
+}
 
 void Server::initialize()
 {
@@ -118,8 +125,11 @@ void Server::cleanup()
     WSACleanup();
 }
 
-void Server::start(int port)
+void Server::start()
 {
+    int port;
+    std::cout << "Enter port" << std::endl;
+    std::cin >> port;
     initialize();
     bindAndListen(port);
     while(true)
