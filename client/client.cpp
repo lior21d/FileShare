@@ -94,11 +94,11 @@ void Client::start() {
     std::string serverIP, filePath;
     std::cout << "Enter server IP: " << std::endl;
     std::cin >> serverIP;
-    std::cout << "Enter filePath: " << std::endl;
-    std::cin >> filePath;
     std::cout << "Enter port: " << std::endl;
     std::cin >> port;
-    
+    std::cout << "Enter filePath: " << std::endl;
+    std::cin >> filePath;
+
 
     initialize();
     connectToServer(serverIP, port);
