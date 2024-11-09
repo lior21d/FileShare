@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include "../crypto/crypto.hpp"
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
 
@@ -23,8 +23,11 @@ class Client
     void initialize();
     void connectToServer(const std::string& serverIP, int port);
     void sendFile(const std::string& filePath);
+    void receiveKey(SOCKET clientSocket);
 
     SOCKET clientSocket;
+    std::string publicKey;
+    
 };
 
 #endif // CLIENT_H

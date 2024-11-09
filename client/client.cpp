@@ -80,6 +80,26 @@ void Client::sendFile(const std::string& filePath)
     inFile.close();
 }
 
+void Client::receiveKey(SOCKET clientSocket)
+{
+    char buffer[1024];  // Buffer to store received data
+    int bytesReceived = 0;
+    std::string publicKey = "";
+
+    if(bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0) > 0);
+    {
+        publicKey = buffer;
+        std::cout << "Received public key!" << std::endl;
+    }
+    if (bytesReceived == SOCKET_ERROR)
+    {
+        std::cerr << "Error receiving public key: " << WSAGetLastError() << std::endl;
+    }
+    
+    this->publicKey = publicKey;
+ 
+}
+
 void Client::cleanup() {
     if (clientSocket != INVALID_SOCKET) {
         closesocket(clientSocket);
@@ -102,6 +122,7 @@ void Client::start() {
 
     initialize();
     connectToServer(serverIP, port);
+    receiveKey(clientSocket);
     sendFile(filePath);
     cleanup();
 }

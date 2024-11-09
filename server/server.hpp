@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include "../crypto/crypto.hpp"
 
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
@@ -25,11 +25,14 @@ public:
 
 private:
     SOCKET serverSocket;
+    Crypto crypto;
 
     void initialize();
     void bindAndListen(int port);
     SOCKET acceptConnection();
     void closeSocket(SOCKET& socket);
+    void sendPublicKey(SOCKET clientSocket);
+    
 };
 
 

@@ -16,6 +16,8 @@ void Server::initialize()
         std::cerr << "WSAStartup failed: " << WSAGetLastError() << std::endl;
         exit(1);
     }
+
+
 }
 
 void Server::bindAndListen(int port)
@@ -132,15 +134,16 @@ void Server::start()
     std::cin >> port;
     initialize();
     bindAndListen(port);
-    while(true)
+
+    SOCKET clientSocket = acceptConnection();
+    if(clientSocket != INVALID_SOCKET)
     {
-        SOCKET clientSocket = acceptConnection();
-        if(clientSocket != INVALID_SOCKET)
-        {
-            receiveFile(clientSocket);
-            closeSocket(clientSocket);
-        }
+        sendPublicKey(clientSocket);
+        receiveFile(clientSocket);
+        closeSocket(clientSocket);
+       
     }
+    
 }
 
 void Server::closeSocket(SOCKET &socket)
@@ -150,3 +153,23 @@ void Server::closeSocket(SOCKET &socket)
         socket = INVALID_SOCKET;  
         }
 }
+
+void Server::sendPublicKey(SOCKET clientSocket)
+{
+    // Generate key pair
+    crypto.generateRSAKeys();
+    
+
+    // Send the public key
+    int bytesSent = send(clientSocket, crypto.getPublicKey().c_str(), crypto.getPublicKey().size(), 0);
+    if (bytesSent == SOCKET_ERROR)
+    {
+        std::cerr << "Error sending public key: " << WSAGetLastError() << std::endl;
+    }
+    else
+    {
+        std::cout << "Sent public key (" << bytesSent << " bytes)" << std::endl;
+        
+    }
+}
+
