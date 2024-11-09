@@ -75,42 +75,51 @@ SOCKET Server::acceptConnection()
 
 void Server::receiveFile(SOCKET clientSocket)
 {
-    const std::size_t bufferSize = 1024; // 1 KB
-    char buffer[bufferSize]; // Buffer that will recieve the data
+    // Receive the encrypted AES key from client
+    std::string decryptedAESKey;
+    receiveKey(clientSocket, decryptedAESKey); 
 
-    // Recieving file name
-    std::size_t recievedBytes = recv(clientSocket, buffer, bufferSize, 0);
-    if (recievedBytes > 0)
+    std::vector<unsigned char> aesKeyVector(decryptedAESKey.begin(), decryptedAESKey.end());
+    // Receive the file name
+    char fileNameBuffer[1024];
+    int bytesReceived = recv(clientSocket, fileNameBuffer, sizeof(fileNameBuffer), 0);
+    if (bytesReceived > 0)
     {
-        std::string fileName(buffer, recievedBytes);
-        std::cout << "Receiving file: " << fileName << std::endl;
+        std::string fileName(fileNameBuffer, bytesReceived);
+        std::cout << "Received file name: " << fileName << std::endl;
 
-        std::ofstream outFile(fileName, std::ios::binary);
-        if (!outFile)
-        {
-            std::cerr << "Could not create file: " << fileName << std::endl;
-        }
-    
-
-        // Reading the file data in chunks
-        while ((recievedBytes = recv(clientSocket, buffer, bufferSize, 0)) > 0)
-        {
-            outFile.write(buffer, recievedBytes);
-        }
-
-        if (recievedBytes < 0)
-        {
-            std::cerr << "Error receiving file data: " << WSAGetLastError() << std::endl;
-        }
+        // Receive the encrypted file data
+        std::vector<unsigned char> encryptedFileData;
+        const size_t bufferSize = 4096;
+        unsigned char buffer[bufferSize];
         
-        // Finished
-        outFile.close();
-        std::cout << "File received successfully!" << std::endl;
+        while (true) {
+            bytesReceived = recv(clientSocket, reinterpret_cast<char*>(buffer), sizeof(buffer), 0);
+            if (bytesReceived > 0) {
+                encryptedFileData.insert(encryptedFileData.end(), buffer, buffer + bytesReceived);
+            } else {
+                // If no more data is received, break the loop
+                break;
+            }
+        }
 
+        std::cout << "Received encrypted file data!" << std::endl;
+
+        // Step 5: Decrypt the file data using the decrypted AES key (now in vector form)
+        std::string decryptedFileData = crypto.decryptAES(encryptedFileData, aesKeyVector);
+        
+        // Step 6: Save the decrypted file to disk
+        std::ofstream outFile(fileName, std::ios::binary);
+        if (outFile.is_open()) {
+            outFile.write(reinterpret_cast<const char*>(decryptedFileData.data()), decryptedFileData.size());
+            outFile.close();
+            std::cout << "Decrypted file saved as: " << fileName << std::endl;
+        } else {
+            std::cerr << "Error opening file for saving: " << fileName << std::endl;
+        }
     }
-    else 
-    {
-        std::cerr << "Error receiving file name: " << WSAGetLastError() << std::endl; 
+    else if (bytesReceived == SOCKET_ERROR) {
+        std::cerr << "Error receiving file name: " << WSAGetLastError() << std::endl;
     }
     closeSocket(clientSocket);
 }
@@ -173,3 +182,27 @@ void Server::sendPublicKey(SOCKET clientSocket)
     }
 }
 
+
+void Server::receiveKey(SOCKET clientSocket, std::string& decryptedAESKey)
+{
+    // Buffer to store received data
+    char buffer[1024];
+    int bytesReceived = 0;
+
+    // Receive the encrypted AES key from the client
+    bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+    if (bytesReceived > 0)
+    {
+        // Store the received encrypted AES key
+        std::vector<unsigned char> encryptedAESKey(buffer, buffer + bytesReceived);
+        std::cout << "Received encrypted AES key!" << std::endl;
+
+        // Decrypt the AES key using the server's private RSA key
+        decryptedAESKey = crypto.decryptRSA(encryptedAESKey); // directly assign the decrypted string
+        std::cout << "Decrypted AES key!" << std::endl;
+    }
+    else if (bytesReceived == SOCKET_ERROR)
+    {
+        std::cerr << "Error receiving encrypted AES key: " << WSAGetLastError() << std::endl;
+    }
+}

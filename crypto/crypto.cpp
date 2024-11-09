@@ -16,6 +16,7 @@ Crypto::~Crypto() {
 
 void Crypto::generateRSAKeys(int bits)
 {
+
     // Gen privatekey
     _privateKey = RSA_generate_key(bits, RSA_F4, nullptr, nullptr);
     if (!_privateKey)
@@ -53,17 +54,17 @@ std::string Crypto::getPublicKey() const
 
 std::vector<unsigned char> Crypto::encryptRSA(const std::string& message) const
 {
-    // Encrypt a message with RSA
+    // Encrypt a message with the provided RSA public key
     if (!_publicKey)
     {
         handleErrors();
     }
 
     std::vector<unsigned char> encrypted(RSA_size(_publicKey));
-        int len = RSA_public_encrypt(message.length(), 
+    int len = RSA_public_encrypt(message.length(),
                                  (const unsigned char*)message.c_str(),
-                                 encrypted.data(), 
-                                 _publicKey, 
+                                 encrypted.data(),
+                                 _publicKey,
                                  RSA_PKCS1_OAEP_PADDING);
 
     if (len == -1) {
@@ -142,6 +143,21 @@ std::vector<unsigned char> Crypto::generateAESKey(int keyLength)
     }
 
     return key;
+}
+
+void Crypto::loadPublicKey(const std::string &publicKeyPem)
+{
+    BIO* bio = BIO_new_mem_buf(publicKeyPem.data(), publicKeyPem.size());
+    if (!bio) {
+        handleErrors();
+    }
+
+    _publicKey = PEM_read_bio_RSA_PUBKEY(bio, nullptr, nullptr, nullptr);
+    if (!_publicKey) {
+        handleErrors();
+    }
+
+    BIO_free(bio);
 }
 
 void Crypto::handleErrors() const 

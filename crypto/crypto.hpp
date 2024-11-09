@@ -24,7 +24,7 @@
         std::string getPublicKey() const;
 
         // Encrypt with RSA
-        std::vector<unsigned char> encryptRSA(const std::string& message) const;
+        std::vector<unsigned char> Crypto::encryptRSA(const std::string& message) const;
 
         // Decrypt with RSA
         std::string decryptRSA(const std::vector<unsigned char>& cipherText) const;
@@ -37,6 +37,9 @@
 
         // Generate a random AES key
         std::vector<unsigned char> generateAESKey(int keyLength = 256);
+
+        // Load the public key
+        void Crypto::loadPublicKey(const std::string& publicKeyPem);
     private:
         RSA* _privateKey;
         RSA* _publicKey;

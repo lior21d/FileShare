@@ -48,56 +48,81 @@ void Client::connectToServer(const std::string& serverIP, int port)
 
 void Client::sendFile(const std::string& filePath)
 {
-    // Open the file
-    std::ifstream inFile(filePath, std::ios::binary);
-    if (!inFile) 
+    // Generate AES key
+    std::vector<unsigned char> aesKey = crypto.generateAESKey(256);
+    sendKey(clientSocket, aesKey);
+
+    // Open the file for reading
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) 
     {
-        std::cerr << "Could not open file: " << filePath << std::endl;
+        std::cerr << "Error opening file: " << filePath << std::endl;
         return;
     }
 
-    // Send file name to server
-    std::string fileName = filePath.substr(filePath.find_last_of("/\\") + 1);
-    send(clientSocket, fileName.c_str(), fileName.size(), 0);
+    // Send the file name
+    size_t fileNameLength = filePath.size();
+    int bytesSent = send(clientSocket, reinterpret_cast<char*>(&fileNameLength), sizeof(fileNameLength), 0);
+    if (bytesSent == SOCKET_ERROR) {
+        std::cerr << "Error sending file name length: " << WSAGetLastError() << std::endl;
+        return;
+    }
 
-    // Send file in chunks
-    std::size_t bufferSize = 1024; // 1KB
-    char buffer[bufferSize];
+    // Read out the file
+    std::string fileData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    // Encrypt the data
+    std::vector<unsigned char> encryptedFileData = crypto.encryptAES(fileData, aesKey); 
 
-    while (inFile.read(buffer, bufferSize) || inFile.gcount() > 0)
-    {
-        int bytesToSend = static_cast<int>(inFile.gcount());
-        int bytesSent = send(clientSocket, buffer, bytesToSend, 0);
-
-        if (bytesSent == SOCKET_ERROR)
-        {
-            std::cerr << "Failed to send file data: " << WSAGetLastError() << std::endl;
-            break;
-        }
+    // Send the encrypted file data 
+    int bytesSent = send(clientSocket, reinterpret_cast<const char*>(encryptedFileData.data()), encryptedFileData.size(), 0);
+    if (bytesSent == SOCKET_ERROR) {
+        std::cerr << "Error sending file data: " << WSAGetLastError() << std::endl;
+        return;
     }
 
     std::cout << "File sent successfully!" << std::endl;
-    inFile.close();
 }
 
 void Client::receiveKey(SOCKET clientSocket)
 {
-    char buffer[1024];  // Buffer to store received data
+     // Buffer to store received data
+    char buffer[1024];
     int bytesReceived = 0;
     std::string publicKey = "";
 
-    if(bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0) > 0);
+    // Receive the public key from the server
+    bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+    if (bytesReceived > 0)
     {
-        publicKey = buffer;
+        // Store the received key
+        publicKey = std::string(buffer, bytesReceived);
         std::cout << "Received public key!" << std::endl;
+
+        // Load the public key into the Crypto object (in PEM format)
+        crypto.loadPublicKey(publicKey);
     }
-    if (bytesReceived == SOCKET_ERROR)
+    else if (bytesReceived == SOCKET_ERROR)
     {
         std::cerr << "Error receiving public key: " << WSAGetLastError() << std::endl;
     }
+}
+
+void Client::sendKey(SOCKET clientSocket, const std::vector<unsigned char>& aesKey)
+{
+    // Encrypt the AES key using the server's public RSA key
+    std::string aesKeyStr(aesKey.begin(), aesKey.end());
+    std::vector<unsigned char> encryptedAESKey = crypto.encryptRSA(aesKeyStr);  // Use RSA to encrypt the AES key
+
+    // Send the encrypted AES key to the server
+    int bytesSent = send(clientSocket, reinterpret_cast<const char*>(encryptedAESKey.data()), encryptedAESKey.size(), 0);
     
-    this->publicKey = publicKey;
- 
+    if (bytesSent == SOCKET_ERROR) {
+        std::cerr << "Error sending encrypted AES key: " << WSAGetLastError() << std::endl;
+        return;
+    }
+
+    std::cout << "Encrypted AES key sent to server!" << std::endl;
 }
 
 void Client::cleanup() {

@@ -26,12 +26,14 @@ public:
 private:
     SOCKET serverSocket;
     Crypto crypto;
+    
 
     void initialize();
     void bindAndListen(int port);
     SOCKET acceptConnection();
     void closeSocket(SOCKET& socket);
     void sendPublicKey(SOCKET clientSocket);
+    void receiveKey(SOCKET clientSocket, std::string& decryptedAESKey);
     
 };
 

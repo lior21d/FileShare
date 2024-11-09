@@ -24,9 +24,10 @@ class Client
     void connectToServer(const std::string& serverIP, int port);
     void sendFile(const std::string& filePath);
     void receiveKey(SOCKET clientSocket);
-
+    void sendKey(SOCKET clientSocket, const std::vector<unsigned char>& aesKey);
     SOCKET clientSocket;
-    std::string publicKey;
+    Crypto crypto;
+    
     
 };
 
