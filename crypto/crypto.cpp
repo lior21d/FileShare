@@ -162,6 +162,7 @@ void Crypto::loadPublicKey(const std::string &publicKeyPem)
 
 void Crypto::handleErrors() const 
 {
+    // Handle errors
     unsigned long errCode = ERR_get_error();
     char errMsg[120];
     ERR_error_string_n(errCode, errMsg, sizeof(errMsg));

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: server
+    ports:
+      - "8080:8080"  # Map ports if needed (example port for server)
+    volumes:
+      - ./server:/app/server
+      - ./client:/app/client
+      - ./crypto:/app/crypto
+    networks:
+      - app-network
+    container_name: server-container
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE: client
+    ports:
+      - "8081:8080"  # Map ports for client if needed (example client port)
+    volumes:
+      - ./server:/app/server
+      - ./client:/app/client
+      - ./crypto:/app/crypto
+    networks:
+      - app-network
+    container_name: client-container
+
+networks:
+  app-network:
+    driver: bridge

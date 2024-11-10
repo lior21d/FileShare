@@ -99,7 +99,7 @@ void Client::receiveKey(SOCKET clientSocket)
         publicKey = std::string(buffer, bytesReceived);
         std::cout << "Received public key!" << std::endl;
 
-        // Load the public key into the Crypto object (in PEM format)
+        // Load the public key into the crypto object 
         crypto.loadPublicKey(publicKey);
     }
     else if (bytesReceived == SOCKET_ERROR)
@@ -110,7 +110,7 @@ void Client::receiveKey(SOCKET clientSocket)
 
 void Client::sendKey(SOCKET clientSocket, const std::vector<unsigned char>& aesKey)
 {
-    // Encrypt the AES key using the server's public RSA key
+    // Encrypt the AES key using the servers public RSA key
     std::string aesKeyStr(aesKey.begin(), aesKey.end());
     std::vector<unsigned char> encryptedAESKey = crypto.encryptRSA(aesKeyStr);  // Use RSA to encrypt the AES key
 
@@ -126,6 +126,7 @@ void Client::sendKey(SOCKET clientSocket, const std::vector<unsigned char>& aesK
 }
 
 void Client::cleanup() {
+    // Cleanup
     if (clientSocket != INVALID_SOCKET) {
         closesocket(clientSocket);
         clientSocket = INVALID_SOCKET;
@@ -135,6 +136,7 @@ void Client::cleanup() {
 
 void Client::start() {
 
+    // Start the client
     int port;
     std::string serverIP, filePath;
     std::cout << "Enter server IP: " << std::endl;

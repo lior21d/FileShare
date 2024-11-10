@@ -105,10 +105,10 @@ void Server::receiveFile(SOCKET clientSocket)
 
         std::cout << "Received encrypted file data!" << std::endl;
 
-        // Step 5: Decrypt the file data using the decrypted AES key (now in vector form)
+        //  Decrypt the file data using the decrypted AES key
         std::string decryptedFileData = crypto.decryptAES(encryptedFileData, aesKeyVector);
         
-        // Step 6: Save the decrypted file to disk
+        // Write into the opened file
         std::ofstream outFile(fileName, std::ios::binary);
         if (outFile.is_open()) {
             outFile.write(reinterpret_cast<const char*>(decryptedFileData.data()), decryptedFileData.size());
@@ -127,6 +127,7 @@ void Server::receiveFile(SOCKET clientSocket)
 
 void Server::cleanup()
 {
+    // Cleanup
     if (serverSocket != INVALID_SOCKET) 
     {
         closesocket(serverSocket);
@@ -138,6 +139,7 @@ void Server::cleanup()
 
 void Server::start()
 {
+    // Start the server
     int port;
     std::cout << "Enter port" << std::endl;
     std::cin >> port;
@@ -157,6 +159,7 @@ void Server::start()
 
 void Server::closeSocket(SOCKET &socket)
 {
+    // Close the socket
         if (socket != INVALID_SOCKET) {
         closesocket(socket);
         socket = INVALID_SOCKET;  
@@ -197,7 +200,7 @@ void Server::receiveKey(SOCKET clientSocket, std::string& decryptedAESKey)
         std::vector<unsigned char> encryptedAESKey(buffer, buffer + bytesReceived);
         std::cout << "Received encrypted AES key!" << std::endl;
 
-        // Decrypt the AES key using the server's private RSA key
+        // Decrypt the AES key using the servers private RSA key
         decryptedAESKey = crypto.decryptRSA(encryptedAESKey); // directly assign the decrypted string
         std::cout << "Decrypted AES key!" << std::endl;
     }
